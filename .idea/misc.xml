@@ -10,6 +10,7 @@
         <option value="$PROJECT_DIR$/java-samples/pom.xml" />
         <option value="$PROJECT_DIR$/spark-server/pom.xml" />
         <option value="$PROJECT_DIR$/mongo-java-samples/pom.xml" />
+        <option value="$PROJECT_DIR$/domain/pom.xml" />
       </list>
     </option>
   </component>

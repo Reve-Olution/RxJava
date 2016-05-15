@@ -34,7 +34,7 @@ public class RestService {
         gson = builder.create();
     }
 
-    public Observable<Indices> findAllIndices () {
+    public Observable<Indices> findAllIndicesAndUpdateCaches (WebServer server) {
 
 
 

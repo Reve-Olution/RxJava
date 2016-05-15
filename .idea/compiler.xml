@@ -22,11 +22,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
+        <module name="domain" />
         <module name="java-samples" />
         <module name="mongo-java-samples" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="domain" target="1.8" />
       <module name="java-samples" target="1.8" />
       <module name="mongo-java-samples" target="1.7" />
       <module name="spark-server" target="1.8" />
