@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+	    <meta charset="utf-8">
+    </head>
+
+    <body>
+
+
+        <!-- main wrapper -->
+        <div id="wrapper">
+
+            <div class="page-header">
+                <h1>RX.js WebSocket <small>GPS Position flow</small></h1>
+            </div>
+            <!-- panneau websocket messages -->
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">WebSocket Messages</h3>
+                </div>
+                <div id ="messages" class="panel-body"></div>
+            </div><!-- end websocket messages -->
+
+            <!-- carte gmap -->
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Carte</h3>
+                </div>
+                <div id ="map" class="panel-body"></div>
+            </div><!-- fin carte gmap -->
+        </div><!-- end main wrapper -->
+
+        <!-- jquery -->
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <!-- bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <!-- rx -->
+        <script type="text/javascript" src="js/rx-all.js"></script>
+        <script type="text/javascript" src="js/rx-dom.js"></script>
+        <!-- app -->
+        <script type="text/javascript" src="js/gpsApp.js"></script>
+        <link rel="stylesheet" href="css/gpsApp.css">
+        <!-- google map -->
+        <script async defer
+                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_5VpQahvX2GsL3sQaCDx8IN_pUPDh-I8&callback=initMap">
+        </script>
+    </body>
+</html>

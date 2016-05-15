@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body>
+
+
+
+    <div class="jumbotron">
+        <h1>Observables samples</h1>
+        <p>Un exemple d'utilisation du pattern observable via des flux websocket</p>
+        <p><a class="btn btn-primary btn-lg" href="#" role="button">Flux GPS </a></p>
+        <p><a class="btn btn-primary btn-lg" href="#" role="button">Flux indices boursiers </a></p>
+    </div>
+
+
+
+<!-- jquery -->
+<script type="text/javascript" src="js/jquery.js"></script>
+<!-- bootstrap -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<!-- rx -->
+
+</body>
+</html>

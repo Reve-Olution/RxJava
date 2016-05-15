@@ -1,0 +1,13 @@
+#wrapper {
+    margin:20px;
+}
+
+#messages {
+    max-height: 160px;
+    font-size: small;
+}
+
+#chartContainer {
+    height: 620px;
+    width:600px;
+}
