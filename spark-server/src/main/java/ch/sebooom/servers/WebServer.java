@@ -18,6 +18,10 @@ import java.util.logging.Logger;
 import static ch.sebooom.servers.WebServer.Paths.*;
 import static spark.Spark.*;
 
+/**
+ * Classe encapsulant la gestion d'un serveur http basé sur SPARK
+ *
+ */
 public class WebServer {
     //Objet indices faisant office de cache avec date données
     private static Indices indicesCache = null;
