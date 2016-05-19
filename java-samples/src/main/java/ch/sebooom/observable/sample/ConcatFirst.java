@@ -34,7 +34,7 @@ public class ConcatFirst {
            log.info(""+test.getNom());
         });
 
-        Thread.sleep(15000);
+        //Thread.sleep(15000);
     }
 
     private  Observable<Test> first() throws InterruptedException {

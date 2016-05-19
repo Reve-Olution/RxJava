@@ -24,7 +24,6 @@
         <processorPath useClasspath="true" />
         <module name="domain" />
         <module name="java-samples" />
-        <module name="mongo-java-samples" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
