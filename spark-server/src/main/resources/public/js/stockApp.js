@@ -1,103 +1,195 @@
 var app = {
-    WS_URL : "ws://localhost:8888/ws/cot",
-    //indice : null,
-    points1:[],
-    points2:[],
-    socket : null,
+    wsUrl : '',
+
+    wsSubject : null,
+    wsObserver : null,
     chart:null,
     nombrePointsGraph :100,
     indices : [],
 
+    //boutons
+    btnWsConnect : '',
 
-    initApp : function () {
-        this.initWebSocketConnection();
+    $wsUrlField : '',
+
+
+    initApp : function (wsServerUrl) {
+        this.wsUrl = wsServerUrl;
+        console.log("app.initApp");
         this.initChart();
-        this.initObservable();
+        this.initGui()
+
+
 
     },
 
-    initWebSocketConnection : function () {
+    showGrowl : function (msg,type) {
+        $.notify({
+            // options
+            message: msg
+        },{
+            // settings
+            type: type
+        });
+    },
+
+    stopSubscribe : function () {
+        this.wsObserver.dispose();
+    },
+
+    /**
+     * Creation sujet: observer connecté au flux serveur etemettant les valeurs
+     */
+    createWSSubject : function () {
         var that = this;
 
+        //ouverture du flux
         var openObserver = Rx.Observer.create(function(e) {
-            console.info('socket open');
+            console.log('app.sujet : socket open : ' + wsUrl);
+            console.log(e);
+            that.showGrowl("Socket open : [" + that.wsUrl +"]","success");
+
         });
 
-        // an observer for when the socket is about to close
+        // fermeture du flux
         var closingObserver = Rx.Observer.create(function() {
-            console.log('socket is about to close');
+            console.log('app.sujet : socket is about to close');
+            that.showGrowl("Socket closed : [" + that.wsUrl +"]","danger");
+            that.$btnDisconnect.hide();
+            that.$btnConnect.show();
+            that.$wsUrlField.removeAttr("readonly");
         });
 
-        // create a web socket subject
-        this.socket = Rx.DOM.fromWebSocket(
-            that.WS_URL,
+        // création du sujet
+        this.wsSubject = Rx.DOM.fromWebSocket(
+            that.wsUrl,
             null,
             openObserver,
             closingObserver);
     },
 
+    createWSObserver : function () {
+        var that = this;
+
+        this.wsObserver = this.wsSubject.subscribe(
+            function( message) {
+
+                console.log(message)
+                var indice = JSON.parse(message.data);
+
+                var cours = indice.cours;
+
+                //si indice n'est pas en cache ajout
+                if(!that.alreadyExist(indice.nom)){
+                    indice.points = [];
+
+                    that.indices.push(indice);
+
+                    that.chart.options.data.push( {
+                        type: "spline",
+                        dataPoints: indice.points,
+                        showInLegend: true,
+                        name: indice.nom
+                    })
+                }
+
+                //recup de l'objet dans le cache
+                indice = that.getObjectPositionInArray(indice.nom);
+
+                that.updateChart(indice,cours);
+            },
+            function(e) {
+                // errors and "unclean" closes land here
+                console.error('app.observer : error: ' + e);
+                that.wsObserver.dispose();
+                that.showGrowl("Error happening during ws subject subscription : [" + that.wsUrl +"]","danger");
+
+            },
+            function() {
+                // the socket has been closed
+                console.info('app.observer : socket closed');
+            }
+        );
+    },
+
+    /**
+     * Création de l'objet chart
+     */
     initChart : function () {
         this.chart = new CanvasJS.Chart("chartContainer",{
             title :{
                 text: "Indice boursiers"
-            }
-                ,zoomEnabled: true
-            ,width:1200
-            ,height:600
-            ,
-            data: [
-            ]
+            },
+            zoomEnabled: true,
+            data : []
         });
-
-
     },
 
-    initObservable : function () {
+    /**
+     * Initialisatond des objets de bases
+     */
+    initGui : function () {
         var that = this;
-        this.socket
+
+        this.btnWsConnect = document.querySelector("#btnWsConnect");
+
+        console.log(this.btnWsConnect.attributes);
+
+        console.log(this.btnWsConnect.attributes.getNamedItem("data-b-isconnect").nodeValue);
+
+        this.$wsUrlField = $('#wsUrl');
+
+       // this.$btnDisconnect.hide();
+
+        // this.$btnDisconnect.click(function () {
+        //     that.$btnConnect.show();
+        //     $(this).hide();
+        //     that.stopSubscribe();
+        //     that.$wsUrlField.removeAttr("readonly","readonly");
+        // });
+        //
+        // this.$btnConnect.click(function () {
+        //     that.$btnDisconnect.show();
+        //     $(this).hide();
+        //     that.wsUrl = that.$wsUrlField.val();
+        //     that.createWSSubject();
+        //     that.createWSObserver();
+        //     that.refreshChart();
+        //     that.$wsUrlField.attr("readonly","readonly");
+        // });
 
 
-            .subscribe(
-                function( message) {
+        var connectBtnClickObservable = Rx.DOM.click(this.btnWsConnect);
 
-                    console.log(message)
-                    var indice = JSON.parse(message.data);
+        //var deconnectClickObservable = Rx.DOM.click(that.$btnDisconnect[0]);
 
-                    var cours = indice.cours;
-                    //indice.points = [];
-                    //var that = this;
+        var subscription = connectBtnClickObservable.subscribe(
+            function (mouseEvent) {
 
-                    //si indice n'est pas en cache ajout
-                    if(!that.alreadyExist(indice.nom)){
-                        console.log("new")
-                        indice.points = [];
 
-                        that.indices.push(indice);
+                console.log('clicked!');
+                console.log(mouseEvent);
+                var isConnect = this.btnWsConnect.attributes.data-b-isconnect;
 
-                        that.chart.options.data.push( {
-                                type: "spline",
-                                 dataPoints: indice.points,
-                                 showInLegend: true,
-                                 name: indice.nom
-                             })
-                    }
+                if(isConnect){
 
-                    console.log(indice);
+                }else{
 
-                    //recup de l'objet dans le cache
-                    indice = that.getObjectPositionInArray(indice.nom);
-
-                    that.updateChart(indice,cours);
-                },
-                function(e) {
-                    // errors and "unclean" closes land here
-                    console.error('error: %s', e);
-                },
-                function() {
-                    // the socket has been closed
-                    console.info('socket closed');
                 }
-            );
+                // that.$btnDisconnect.show();
+                // $(this).hide();
+                // that.wsUrl = that.$wsUrlField.val();
+                // that.createWSSubject();
+                // that.createWSObserver();
+                // that.refreshChart();
+                // that.$wsUrlField.attr("readonly","readonly");
+            });
+    },
+
+    refreshChart : function () {
+        this.chart.options.data = [];
+        this.indices = [];
+        this.chart.render();
     },
 
     updateChart : function (indice,cours) {
@@ -122,6 +214,7 @@ var app = {
     alreadyExist : function ( nom) {
 
         var nbreElements = this.indices.length;
+        console.log(1);
 
         if (nbreElements === 0) {
             return false;
@@ -158,6 +251,3 @@ var app = {
 
 };
 
-window.onload = function () {
-    app.initApp();
-};
