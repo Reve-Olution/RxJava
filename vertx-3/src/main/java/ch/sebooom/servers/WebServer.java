@@ -9,56 +9,37 @@ import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.AbstractVerticle;
-import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.core.http.ServerWebSocket;
 import io.vertx.rxjava.ext.web.Router;
 import rx.Observable;
 
+import static ch.sebooom.servers.Paths.COTATION_WEBSOCKET;
+import static ch.sebooom.servers.Paths.GPS_WEBSOCKET;
+import static ch.sebooom.servers.Paths.isPathForType;
+
 /**
- * Created by seb on 01.05.16.
+ * Vertx web server.
+ * Paramètres de configuration:
+ * http.port = port tcp d' écoute du serveur http
  */
 public class WebServer extends AbstractVerticle {
 
     private static final Logger log = LoggerFactory.getLogger(WebServer.class);
-    private Integer port;
-    private static final int DEFAULT_PORT = 8989;
-    public static final String H1_TEST_MESSAGE = "Test ok";
-
-    enum WebSocketPaths{
-        GPS_WEBSOCKET("/ws/gps"),
-        COTATION_WEBSOCKET("/ws/cot");
-
-        private final String path;
-
-        WebSocketPaths(String path){
-            this.path = path;
-        }
-
-        public String path() {
-            return path;
-        }
-
-    }
-
-    Vertx vertx = Vertx.vertx();
+    public static final CharSequence H1_TEST_MESSAGE = "<h1>test : ok </h1>";
+    private int port;
+    public static final int DEFAULT_PORT = 8989;
 
 
+    @Override
     public void start() {
 
         Router router = Router.router(vertx);
 
-        port = this.config().getInteger("http.port");
-
-        if(null == port){
-            port = DEFAULT_PORT;
-        }
-
+        serverConfig();
 
         HttpServer server = vertx.createHttpServer().requestHandler(router::accept);
-
-
 
         log.info("[" +Thread.currentThread().getName()
                         +"] Creating httpServer on port [" + port + "]");
@@ -66,13 +47,17 @@ public class WebServer extends AbstractVerticle {
 
         addWebSocketHandler(server);
 
-        startServerListenning(server);
-
         initRoutes(router);
 
+        startServerListenning(server);
 
     }
 
+    private void serverConfig() {
+
+        Integer http_port = this.config().getInteger("http.port");
+        port = (null == http_port) ? DEFAULT_PORT : http_port;
+    }
 
 
     private void addWebSocketHandler (HttpServer server) {
@@ -81,28 +66,29 @@ public class WebServer extends AbstractVerticle {
 
         socketObservable
                 .filter(item->{
-                    return item.path().equals(WebSocketPaths.GPS_WEBSOCKET.path())
-                            || item.path().equals(WebSocketPaths.COTATION_WEBSOCKET.path());
+
+                    log.info("[test] - " + item.path() + " " + isPathForType(item.path(), PathType.WEBSOCKET));
+                    return isPathForType(item.path(), PathType.WEBSOCKET);
                 })
                 .subscribe(
                         socket -> {
-                            log.info("Web socket connect [" + socket.binaryHandlerID() + "]");
+                            log.info("[webserver] Web socket connect [" + socket.path()+ "] - " + socket.binaryHandlerID());
 
                             vertx.executeBlockingObservable(handler ->{
 
                                 startWorkerWriter(socket);
 
                                 socket.closeHandler(closeHandler -> {
-                                    log.info("Socket closed by client");
+                                    log.info("[webserver] Socket closed by client");
                                 });
 
                             });
                         },
                         failure -> {
-                            log.info("Error during starting websocket [" + failure.getCause() + "]");
+                            log.error("[webserver] Error during starting websocket [" + failure.getCause() + "]");
                         },
                         () -> {
-                            log.info("Subscription ended or server closed");
+                            log.info("[webserver] Subscription ended or server closed");
                         }
                 );
 
@@ -123,9 +109,9 @@ public class WebServer extends AbstractVerticle {
 
         log.info("Starting worker:" + socket.path());
 
-        if(socket.path().equals(WebSocketPaths.GPS_WEBSOCKET.path())){
+        if(socket.path().equals(GPS_WEBSOCKET.path())){
             socketWriter = new WebSocketPositionWriter().socket(socket);
-        }else if(socket.path().equals(WebSocketPaths.COTATION_WEBSOCKET.path())){
+        }else if(socket.path().equals(COTATION_WEBSOCKET.path())){
             socketWriter = new WebSocketCotationWriter().socket(socket);
         }else{
             throw new IllegalArgumentException("Socket path illegal: " + socket.path());
@@ -138,15 +124,15 @@ public class WebServer extends AbstractVerticle {
 
     private void initRoutes (Router router) {
         //test
-        router.get("/test").handler(routingContext -> {
+        router.get(Paths.TEST.path()).handler(routingContext -> {
             HttpServerResponse response = routingContext.response();
             response
                     .putHeader("content-type", "text/html")
-                    .end("<h1>" + H1_TEST_MESSAGE +"</h1>");
+                    .end(H1_TEST_MESSAGE.toString());
         });
 
         //indices
-        router.get("/api/indices").handler(routingContext -> {
+        router.get(Paths.API_INDICES.path()).handler(routingContext -> {
             HttpServerResponse response = routingContext.response();
             response
                     .putHeader("content-type", "application/json")

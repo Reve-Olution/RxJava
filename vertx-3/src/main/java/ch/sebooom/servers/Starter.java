@@ -1,7 +1,6 @@
 package ch.sebooom.servers;
 
 import io.vertx.core.DeploymentOptions;
-
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -10,15 +9,11 @@ import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 
 /**
- * Created by seb on 01.05.16.
+ * Classe permettant de piloter les verticles du projet
+ *
  */
 public class Starter {
 
@@ -32,29 +27,21 @@ public class Starter {
 
         ports = new ArrayList<Integer>();
 
-        Observable<String> serverLaunchObservable = null;
+        List<Observable<String>> instancesToLaunch = null;
 
-        if(args.length == 0){
-            ports.add(DEFAULT_PORT);
-            serverLaunchObservable = uniqueInstanceLauncher(DEFAULT_PORT);
-        }else{
-            if(args.length == 1){
-                ports.add(Integer.parseInt(args[0]));
-                serverLaunchObservable = uniqueInstanceLauncher(ports.get(0));
-            }else{
-
-                Stream.of(args)
-                        .mapToInt(Integer::parseInt)
-                        .forEach(ports::add);
-
-                serverLaunchObservable = multipleInstancesLauncher(ports);
-
-            }
+        for(String port : args){
+            ports.add(Integer.parseInt(port));
         }
 
-        serverLaunchObservable.subscribe(
+
+
+        instancesToLaunch = getInstancesObservable(ports);
+
+
+        Observable.merge(instancesToLaunch)
+            .subscribe(
                 next -> {
-                    System.out.println(next);
+                    log.info("Starting instance id: " + next);
 
                 },
                 error -> {
@@ -70,7 +57,7 @@ public class Starter {
 
     private static void splashConsole () {
 
-        System.out.println();
+        System.out.println(" __     __        _            _____    ___  _                             _     _     ");
         System.out.println(" \\ \\   / /__ _ __| |_  __  __ |___ /   / _ \\| |__  ___  ___ _ ____   ____ _| |__ | | ___");
         System.out.println("  \\ \\ / / _ \\ '__| __| \\ \\/ /   |_ \\  | | | | '_ \\/ __|/ _ \\ '__\\ \\ / / _` | '_ \\| |/ _ \\");
         System.out.println("   \\ V /  __/ |  | |_ _ >  <   ___) | | |_| | |_) \\__ \\  __/ |   \\ V / (_| | |_) | |  __/");
@@ -92,23 +79,20 @@ public class Starter {
         }
     }
 
-    private static Observable<String> uniqueInstanceLauncher (Integer port) {
-        DeploymentOptions options = new DeploymentOptions();
-        options.setConfig(new JsonObject().put("http.port",port));
-        return vertx.deployVerticleObservable(WebServer.class.getName(),options);
 
-    }
 
-    private static Observable<String> multipleInstancesLauncher (List<Integer> ports) {
-        DeploymentOptions options = new DeploymentOptions();
+    private static List<Observable<String>> getInstancesObservable (List<Integer> ports) {
+        List<Observable<String>> servers = new ArrayList<>();
 
         for(Integer port : ports){
 
-            return uniqueInstanceLauncher(port);
+            DeploymentOptions options = new DeploymentOptions();
+            options.setConfig(new JsonObject().put("http.port",port));
+            servers.add(vertx.deployVerticleObservable(WebServer.class.getName(),options));
 
         }
 
-        throw new IllegalArgumentException("Multiple intances failed, no port defined");
+        return servers;
 
     }
 }

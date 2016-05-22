@@ -29,17 +29,14 @@ public class User {
       MASCULIN, FEMININ
     };
 
-    private boolean isActive = true;
     private String login;
-    private String pass;
     private int age;
-    private Sexe sexe;
 
     public User(String login, String pass, int age, Sexe sexe, boolean isActive) {
         this.login = login;
-        this.pass = pass;
+        String pass1 = pass;
         this.age = age;
-        this.sexe = sexe;
-        this.isActive = isActive;
+        Sexe sexe1 = sexe;
+        boolean isActive1 = isActive;
     }
 }

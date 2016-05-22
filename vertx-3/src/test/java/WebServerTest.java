@@ -1,3 +1,4 @@
+import ch.sebooom.servers.Paths;
 import ch.sebooom.servers.WebServer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.HttpClientOptions;
@@ -17,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,7 +28,7 @@ import java.util.List;
 public class WebServerTest {
 
     private Vertx vertx;
-    private final static List<Integer> serverPortsList = new ArrayList<>(2);
+    private final static List<Integer> serverPortsList = new ArrayList<>();
     private static final Logger log = LoggerFactory.getLogger(WebServerTest.class);
 
     @Before
@@ -40,7 +42,9 @@ public class WebServerTest {
 
     @After
     public void tearDown(TestContext context) {
+
         vertx.close(context.asyncAssertSuccess());
+        log.info("[webserver.close]" + " closing instances");
     }
 
     @Test
@@ -60,6 +64,53 @@ public class WebServerTest {
     }
 
     @Test
+    public void testAllowedRoutes (TestContext context) throws InterruptedException {
+
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+
+        //creation d'un stream sur chaque port
+        serverPortsList.stream()
+
+                //conversion des ports en flux PathWithPort (pour garder l'infos port)
+                .flatMap(
+
+
+                     port -> {
+
+
+                        List<PathsWithPort> pathsByPort = new ArrayList<PathsWithPort>();
+                        Arrays.asList(Paths.values()).forEach(route -> {
+                            pathsByPort.add(new PathsWithPort(port,route));
+                        });
+
+                        return pathsByPort.stream();
+                    }
+                ).forEach(websocketRoute -> {
+
+                        log.info("[test] " + "Create new WebSocketClient : " + websocketRoute.port+":"+websocketRoute.paths );
+                        WebSocketStream stream = client.websocketStream(websocketRoute.port, "localhost", websocketRoute.paths.path());
+                        log.info("[test] " + "WebSocketClientStream : " + stream.toString()  );
+
+
+            stream.toObservable()
+                                .flatMap(WebSocket::toObservable)
+                                .subscribe(
+                                        ws -> {
+
+                                            String message = ws.getString(0,ws.length());
+                                            log.info("[test] [ " + websocketRoute.port+":"+websocketRoute.paths.path() +"]" + message);
+                                            context.assertNotNull(message);
+                                            context.assertFalse(message.isEmpty());
+
+                                        },
+                                        error -> {error.printStackTrace();}
+                                );
+                    });
+
+        Thread.sleep(5000);
+    }
+
+    @Test
     public void testWebSocketForAllInstance (TestContext context) throws InterruptedException {
         HttpClient client = vertx.createHttpClient(new HttpClientOptions());
 
@@ -68,7 +119,6 @@ public class WebServerTest {
 
             stream.toObservable()
                     .flatMap(WebSocket::toObservable)
-                    .skip(2)
                     .subscribe(
                             ws -> {
                                 String message = ws.getString(0,ws.length());
@@ -86,7 +136,7 @@ public class WebServerTest {
 
 
 
-        Thread.sleep(5000);
+        Thread.sleep(3000);
 
 
     }
@@ -109,9 +159,20 @@ public class WebServerTest {
     }
 
     private void initTestsParameters () {
+        serverPortsList.add(WebServer.DEFAULT_PORT);
         serverPortsList.add(9998);
         serverPortsList.add(9999);
 
+    }
+
+    class PathsWithPort {
+        int port;
+        Paths paths;
+
+        PathsWithPort(int port, Paths paths){
+            this.port = port;
+            this.paths = paths;
+        }
     }
 }
 
