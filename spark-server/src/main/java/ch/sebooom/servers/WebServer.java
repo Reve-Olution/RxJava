@@ -15,11 +15,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static ch.sebooom.servers.WebServer.Paths.*;
+import static ch.sebooom.servers.WebServerConfig.DefaultValues.WS_SERVER_HOST;
+import static ch.sebooom.servers.WebServerConfig.DefaultValues.WS_SERVER_INDICES_PATH;
+import static ch.sebooom.servers.WebServerConfig.DefaultValues.WS_SERVER_PORT;
+import static ch.sebooom.servers.WebServerPath.*;
 import static spark.Spark.*;
 
 /**
  * Classe encapsulant la gestion d'un serveur http basé sur SPARK
+ * Paramètres optionnels à passer en argument:
+ * -h [host], défaut : localhost
+ * -p [port], défaut : 8888
  *
  */
 public class WebServer {
@@ -31,24 +37,16 @@ public class WebServer {
     public static final Logger log = Logger.getLogger(WebServer.class.getName());
     public static final Gson gson = new GsonBuilder().create();
 
-    //Server
-    Config serverConfig;
-    private static final String WEB_FOLDER = "/public";
+    //Objet contenant la configuration par défaut du serveur
+    WebServerConfig config;
 
-    enum Paths {
-        ROOT("/"),
-        TEST("/test"),
-        EVENTS("/events"),
-        GPS_CLIENT("/gpsSocket"),
-        INDICES_CLIENT("/indicesSocket"),
-        REST_INDICES("/indices");
 
-        private String path;
-
-        Paths(String path){
-            this.path = path;
-        }
-
+    /**
+     * Constuit une instance et la rend prete au démarrage
+     * @param args les arguments
+     */
+    public WebServer(String... args){
+        initConfig(args);
     }
     /**
      * Server entry point
@@ -56,35 +54,27 @@ public class WebServer {
      */
 	public static void main(String... args) {
 
-        WebServer server = new WebServer();
-
-        server.initConfig(args);
-
-        server.start();
-
-
-
-
+        new WebServer(args).start();
 	}
 
     private void start() {
-        port(serverConfig.port);
-        staticFileLocation(WEB_FOLDER);
+        port(config.getPort());
+        staticFileLocation(WebServerConfig.DefaultValues.WS_SERVER_WWW.strValue);
         initRoutes();
     }
 
     private void initRoutes() {
 
-        get(ROOT.path, (req, res ) -> {
+        get(ROOT.path(), (req, res ) -> {
             Map<String, Object> model = new HashMap<>();
 
             // The wm files are located under the resources directory
             return new ModelAndView(model, "/public/index.vm");
         }, new VelocityTemplateEngine());
 
-        get(TEST.path, (req, res) -> "{\"test\":\"ok\"}");
+        get(TEST.path(), (req, res) -> "{\"test\":\"ok\"}");
 
-        get(EVENTS.path, (request, response) -> {
+        get(EVENTS.path(), (request, response) -> {
             Map<String, Object> model = new HashMap<>();
             model.put("hello", "Velocity World");
             model.put("person", "Foobar");
@@ -93,20 +83,22 @@ public class WebServer {
             return new ModelAndView(model, "/public/events.vm");
         }, new VelocityTemplateEngine());
 
-        get(GPS_CLIENT.path, (request, response) -> {
+        get(GPS_CLIENT.path(), (request, response) -> {
             Map<String, Object> model = new HashMap<>();
             // The wm files are located under the resources directory
-            return new ModelAndView(model, "/public/gpsSocketClient.vm");
+            return new ModelAndView(model, "/public/gpsApp.vm");
         }, new VelocityTemplateEngine());
 
-        get(INDICES_CLIENT.path, (request, response) -> {
+        get(INDICES_CLIENT.path(), (request, response) -> {
             Map<String, Object> model = new HashMap<>();
+            model.put("wsUrl","ws://" +  WS_SERVER_HOST.strValue + ":" + WS_SERVER_PORT.intValue + WS_SERVER_INDICES_PATH.strValue );
+            model.put("serverUri", config.getHost() + ":" +config.getPort());
             // The wm files are located under the resources directory
-            return new ModelAndView(model, "/public/stockSocketClientRealTime.vm");
+            return new ModelAndView(model, "/public/stockApp.vm");
         }, new VelocityTemplateEngine());
 
 
-        get(REST_INDICES.path, (request,response) -> {
+        get(REST_INDICES.path(), (request,response) -> {
 
 
             final StringBuilder jsonReturnString = new StringBuilder();
@@ -137,26 +129,27 @@ public class WebServer {
         });
     }
 
+    /**
+     * Initialisation de l'objet contenant la configuration su serveur
+     * @param args les arguments
+     */
     private void initConfig(String... args){
-        //si pas d'arguments, valeur par défaut
-        if(args.length == 0){
-            serverConfig = new Config();
-            log.info("No arguments passed in the app. Default values will be applied:");
-            log.info("server.port: " + serverConfig.port);
+        //si config ok on traite
+        if(WebServerConfig.checkArgs(args)){
+            config = WebServerConfig.extractArgs(args);
+            log.info("Arguments passed in the app. Values will be applied:");
+            log.info("host : " + config.getHost() + " , port : " + config.getPort());
+
         }else{
-            serverConfig = extractArgsToConfig(args);
-            log.info("Arguments passed in the app.");
-            log.info("server.port: " + serverConfig.port);
+            config = new WebServerConfig();
+            log.info("No arguments passed in the app or not valid. Default values will be applied:");
+            log.info("host : " + WS_SERVER_HOST.strValue + " , port : " + WS_SERVER_PORT.intValue);
+
         }
 
     }
 
-    private  Config extractArgsToConfig(String[] args) {
 
-
-            return new Config(Integer.parseInt(args[0]));
-
-    }
 
     private  Observable<Indices> getIndicesCache () {
 
@@ -194,23 +187,6 @@ public class WebServer {
 
     }
 
-    static class Config {
-        private final static int DEFAULT_PORT = 9999;
-        private int port;
 
-
-        Config () {
-            this.port = DEFAULT_PORT;
-        }
-
-        Config (int port){
-            this.port = port;
-        }
-
-        int port(){
-            return port;
-        }
-
-    }
 
 }

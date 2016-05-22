@@ -10,6 +10,8 @@
         <!-- main wrapper -->
         <div id="wrapper">
 
+            <p></p>
+
             <div class="page-header">
                 <h1>RX.js WebSocket <small>Stock index flow</small></h1>
             </div>
@@ -18,7 +20,24 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">WebSocket Messages</h3>
                 </div>
-                <div id ="messages" class="panel-body"></div>
+                <div  class="panel-body">
+
+                    <dl class="dl-horizontal">
+                        <dt>URI Server</dt>
+                        <dd>$serverUri</dd>
+                    </dl>
+                    <!-- field choix url ws -->
+                    <div class="input-group">
+                        <div class="input-group-addon">ws://</div>
+                        <input id="wsUrl" style="width:300px;" class="form-control" type="text" value="$wsUrl">
+                        <button id="btnWsConnect" type="button" class="btn btn-success" data-b-isConnect="false">Connect</button>
+                        <!-- -->
+                    </div>
+
+                </div>
+                <div id ="messages" class="panel-body">
+
+                </div>
             </div><!-- end websocket messages -->
 
             <!-- zone graph -->
@@ -37,11 +56,20 @@
         <!-- bootstrap -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <script src="js/bootstrap-notify.min.js" ></script>
+
         <!-- rx -->
         <script type="text/javascript" src="js/rx-all.js"></script>
         <script type="text/javascript" src="js/rx-dom.js"></script>
         <!-- app -->
         <script type="text/javascript" src="js/stockApp.js"></script>
+        <script type="text/javascript">
+
+
+            $(function (){
+                app.initApp('$wsUrl');
+            });
+        </script>
         <link rel="stylesheet" href="css/stockApp.css">
 
     </body>

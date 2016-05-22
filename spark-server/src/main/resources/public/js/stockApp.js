@@ -1,26 +1,27 @@
 var app = {
-    wsUrl : '',
 
-    wsSubject : null,
-    wsObserver : null,
-    chart:null,
-    nombrePointsGraph :100,
-    indices : [],
+    wsUrl : '',                 //url du websocket
 
-    //boutons
-    btnWsConnect : '',
+    wsSubject : null,           //observable basé sur le websocket
+    wsObserver : null,          //observer à l'écoute des messages
+    chart:null,                 //le graph, composant canvas.js
+    nombrePointsGraph :100,     //nombre de ponts max à afficher en même temps
+    indices : [],               //tableau des indices à afficher sur le graph
 
-    $wsUrlField : '',
+    //ui
+    $btnWsConnect : '',         //bouton de connexion au ws
+    $wsUrlField : '',           //champ de saisie de l'url
 
 
+    /**
+     * Méthode initialisant l'application avec l'url du websocket en paramètre
+     * @param wsServerUrl l'url de la websocket
+     */
     initApp : function (wsServerUrl) {
         this.wsUrl = wsServerUrl;
-        console.log("app.initApp");
+        console.log("app.initApp with ws url: " + this.wsUrl);
         this.initChart();
         this.initGui()
-
-
-
     },
 
     showGrowl : function (msg,type) {
@@ -55,8 +56,8 @@ var app = {
         var closingObserver = Rx.Observer.create(function() {
             console.log('app.sujet : socket is about to close');
             that.showGrowl("Socket closed : [" + that.wsUrl +"]","danger");
-            that.$btnDisconnect.hide();
-            that.$btnConnect.show();
+            that.switchConnectState("false");
+
             that.$wsUrlField.removeAttr("readonly");
         });
 
@@ -74,7 +75,7 @@ var app = {
         this.wsObserver = this.wsSubject.subscribe(
             function( message) {
 
-                console.log(message)
+                console.log(message);
                 var indice = JSON.parse(message.data);
 
                 var cours = indice.cours;
@@ -113,7 +114,7 @@ var app = {
     },
 
     /**
-     * Création de l'objet chart
+     * Création de l'objet chart (composant canvas.js
      */
     initChart : function () {
         this.chart = new CanvasJS.Chart("chartContainer",{
@@ -126,65 +127,67 @@ var app = {
     },
 
     /**
-     * Initialisatond des objets de bases
+     * Initialisatons des objets de bases html
      */
     initGui : function () {
         var that = this;
 
-        this.btnWsConnect = document.querySelector("#btnWsConnect");
-
-        console.log(this.btnWsConnect.attributes);
-
-        console.log(this.btnWsConnect.attributes.getNamedItem("data-b-isconnect").nodeValue);
-
+        this.$btnWsConnect = $('#btnWsConnect');
         this.$wsUrlField = $('#wsUrl');
 
-       // this.$btnDisconnect.hide();
-
-        // this.$btnDisconnect.click(function () {
-        //     that.$btnConnect.show();
-        //     $(this).hide();
-        //     that.stopSubscribe();
-        //     that.$wsUrlField.removeAttr("readonly","readonly");
-        // });
-        //
-        // this.$btnConnect.click(function () {
-        //     that.$btnDisconnect.show();
-        //     $(this).hide();
-        //     that.wsUrl = that.$wsUrlField.val();
-        //     that.createWSSubject();
-        //     that.createWSObserver();
-        //     that.refreshChart();
-        //     that.$wsUrlField.attr("readonly","readonly");
-        // });
-
-
-        var connectBtnClickObservable = Rx.DOM.click(this.btnWsConnect);
-
-        //var deconnectClickObservable = Rx.DOM.click(that.$btnDisconnect[0]);
+        //evenement click via observable
+        var connectBtnClickObservable = Rx.DOM.click(this.$btnWsConnect[0]);
 
         var subscription = connectBtnClickObservable.subscribe(
+
             function (mouseEvent) {
+                var isConnectState = (that.$btnWsConnect.attr("data-b-isconnect") === 'true');
+                that.switchConnectState(isConnectState);
 
-
-                console.log('clicked!');
-                console.log(mouseEvent);
-                var isConnect = this.btnWsConnect.attributes.data-b-isconnect;
-
-                if(isConnect){
-
-                }else{
-
-                }
-                // that.$btnDisconnect.show();
-                // $(this).hide();
-                // that.wsUrl = that.$wsUrlField.val();
-                // that.createWSSubject();
-                // that.createWSObserver();
-                // that.refreshChart();
-                // that.$wsUrlField.attr("readonly","readonly");
             });
     },
+
+    /**
+     * Change les composant ui en fonction de l'état de connexion au webservice
+     *
+     * @param isConnectState
+     */
+    switchConnectState : function (isConnectState) {
+
+        var that = this;
+        var isconnect,labelConnect;
+
+        if(isConnectState){
+            console.log(isConnectState);
+
+            that.stopSubscribe();
+            //ui
+            isconnect = "false";
+            labelConnect = "Connect";
+            that.$btnWsConnect.removeClass("btn-danger").addClass("btn-success");
+            that.$wsUrlField.removeAttr("readonly","readonly");
+
+        }else{
+            console.log(isConnectState);
+
+
+            that.createWSSubject();
+            that.createWSObserver();
+            that.refreshChart();
+
+            isconnect = "true";
+            labelConnect = "Disconnect";
+            that.wsUrl = that.$wsUrlField.val();
+            that.$btnWsConnect.removeClass("btn-success").addClass("btn-danger");
+            that.$wsUrlField.attr("readonly","readonly");
+
+        }
+
+        that.$btnWsConnect.attr("data-b-isconnect",isconnect);
+        that.$btnWsConnect.html(labelConnect);
+
+    },
+
 
     refreshChart : function () {
         this.chart.options.data = [];

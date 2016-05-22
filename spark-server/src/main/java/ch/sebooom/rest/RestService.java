@@ -18,13 +18,13 @@ import java.util.logging.Logger;
  */
 public class RestService {
 
-    private GsonBuilder builder = new GsonBuilder();
     private Gson gson;
     public static final Logger log = Logger.getLogger(RestService.class.getName());
 
 
 
     public RestService () {
+        GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
             @Override
             public Date deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
