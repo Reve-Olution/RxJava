@@ -1,7 +1,7 @@
 package ch.sebooom.rest;
 
 
-import cotation.Indices;
+import bourse.Indices;
 import retrofit.http.GET;
 
 /**

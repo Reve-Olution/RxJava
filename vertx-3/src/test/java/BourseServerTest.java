@@ -1,5 +1,5 @@
 import ch.sebooom.servers.Paths;
-import ch.sebooom.servers.WebServer;
+import ch.sebooom.servers.BourseServer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
@@ -25,11 +25,11 @@ import java.util.List;
  * Created by seb on 01.05.16.
  */
 @RunWith(VertxUnitRunner.class)
-public class WebServerTest {
+public class BourseServerTest {
 
     private Vertx vertx;
     private final static List<Integer> serverPortsList = new ArrayList<>();
-    private static final Logger log = LoggerFactory.getLogger(WebServerTest.class);
+    private static final Logger log = LoggerFactory.getLogger(BourseServerTest.class);
 
     @Before
     public void setUp(TestContext context) {
@@ -56,7 +56,7 @@ public class WebServerTest {
             vertx.createHttpClient().getNow(port, "localhost", "/test",
                     response -> {
                         response.handler(body -> {
-                            context.assertTrue(body.toString().contains(WebServer.H1_TEST_MESSAGE));
+                            context.assertTrue(body.toString().contains(BourseServer.H1_TEST_MESSAGE));
                             async.complete();
                         });
                     });
@@ -144,7 +144,7 @@ public class WebServerTest {
 
     private void deployWebServers (TestContext context) {
         //Default port 8989
-        vertx.deployVerticle(WebServer.class.getName(),
+        vertx.deployVerticle(BourseServer.class.getName(),
                 context.asyncAssertSuccess());
 
         //Autres instances de la liste des ports
@@ -152,14 +152,14 @@ public class WebServerTest {
             DeploymentOptions options = new DeploymentOptions()
                     .setConfig(new JsonObject().put("http.port", port)
                     );
-            vertx.deployVerticle(WebServer.class.getName(),options,
+            vertx.deployVerticle(BourseServer.class.getName(),options,
                     context.asyncAssertSuccess());
         }
 
     }
 
     private void initTestsParameters () {
-        serverPortsList.add(WebServer.DEFAULT_PORT);
+        serverPortsList.add(BourseServer.DEFAULT_PORT);
         serverPortsList.add(9998);
         serverPortsList.add(9999);
 

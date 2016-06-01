@@ -1,12 +1,12 @@
 var app = {
 
     wsUrl : '',                 //url du websocket
-
+    restUrl : '',
     wsSubject : null,           //observable basé sur le websocket
     wsObserver : null,          //observer à l'écoute des messages
     chart:null,                 //le graph, composant canvas.js
-    nombrePointsGraph :100,     //nombre de ponts max à afficher en même temps
-    indices : [],               //tableau des indices à afficher sur le graph
+    nombrePointsGraph :20,     //nombre de ponts max à afficher en même temps
+    indicesCache : [],          //indices mis en cache
 
     //ui
     $btnWsConnect : '',         //bouton de connexion au ws
@@ -17,11 +17,29 @@ var app = {
      * Méthode initialisant l'application avec l'url du websocket en paramètre
      * @param wsServerUrl l'url de la websocket
      */
-    initApp : function (wsServerUrl) {
+    initApp : function (wsServerUrl,restUrl) {
         this.wsUrl = wsServerUrl;
+        this.restUrl = restUrl;
+        //this.initDatas();
         console.log("app.initApp with ws url: " + this.wsUrl);
         this.initChart();
         this.initGui()
+    },
+
+    initDatas : function () {
+        var that = this;
+        //Appel rest vers
+        Rx.DOM.ajax({ method : "GET", url: that.restUrl, responseType: 'json'})
+            .subscribe(
+                function (data) {
+                    data.response.forEach(function (product) {
+                        console.log(product);
+                    });
+                },
+                function (error) {
+                    // Log the error
+                }
+            );
     },
 
     showGrowl : function (msg,type) {
@@ -39,7 +57,7 @@ var app = {
     },
 
     /**
-     * Creation sujet: observer connecté au flux serveur etemettant les valeurs
+     * Creation sujet: observer connecté au flux serveur et emettant les valeurs
      */
     createWSSubject : function () {
         var that = this;
@@ -69,47 +87,83 @@ var app = {
             closingObserver);
     },
 
+    indiceSet : function (nomIndice) {
+
+        var isSet = false;
+
+        $('#legendContainer input:checked').each(function() {
+
+            console.log("Element: " + $(this).attr('name'));
+            console.log("Element to match: " + nomIndice);
+
+            if($(this).attr('name') === nomIndice){
+                isSet = true;
+            }
+        });
+
+        return isSet;
+
+
+    },
+
     createWSObserver : function () {
         var that = this;
 
-        this.wsObserver = this.wsSubject.subscribe(
-            function( message) {
-
-                console.log(message);
+        this.wsObserver = this.wsSubject
+            .filter(function (message){
+                //recuperation du message et conversion en objet
                 var indice = JSON.parse(message.data);
 
-                var cours = indice.cours;
+                return indice.typeValeur === 'INDICE_BOURSIER'
 
-                //si indice n'est pas en cache ajout
-                if(!that.alreadyExist(indice.nom)){
-                    indice.points = [];
+                && that.indiceSet(indice.nom); // on limite auax indices choisis
+            })
+            .subscribe(
+                function( message) {
 
-                    that.indices.push(indice);
+                    console.log(message);
+                    //recuperation du message et conversion en objet
+                    var indice = JSON.parse(message.data);
+                    //recuperation du cours de l'indice
+                    var cours = indice.cours;
 
-                    that.chart.options.data.push( {
-                        type: "spline",
-                        dataPoints: indice.points,
-                        showInLegend: true,
-                        name: indice.nom
-                    })
+                    //si indice n'est pas en cache on l'ajoute
+                    if(!that.alreadyExist(indice.nom)){
+                        //initialisation du teableua des points de l'indice
+                        indice.points = [];
+                        indice.isVisible = true;
+
+                        //on ajoute l'indice au cache
+                        that.indicesCache.push(indice);
+
+                        //on met a jour les donnes du graph
+                        that.chart.options.data.push( {
+                            type: "spline",
+                            dataPoints: indice.points,
+                            showInLegend: indice.isVisible,
+                            visible: indice.isVisible,
+                            name: indice.nom
+                        })
+
+                        that.showLegend(indice.nom);
+                    }
+
+                    //recup de l'objet dans le cache
+                    indice = that.getObjectPositionInArray(indice.nom);
+
+                    that.updateChart(indice,cours);
+                },
+                function(e) {
+                    // errors and "unclean" closes land here
+                    console.error('app.observer : error: ' + e);
+                    that.wsObserver.dispose();
+                    that.showGrowl("Error happening during ws subject subscription : [" + that.wsUrl +"]","danger");
+
+                },
+                function() {
+                    // the socket has been closed
+                    console.info('app.observer : socket closed');
                 }
-
-                //recup de l'objet dans le cache
-                indice = that.getObjectPositionInArray(indice.nom);
-
-                that.updateChart(indice,cours);
-            },
-            function(e) {
-                // errors and "unclean" closes land here
-                console.error('app.observer : error: ' + e);
-                that.wsObserver.dispose();
-                that.showGrowl("Error happening during ws subject subscription : [" + that.wsUrl +"]","danger");
-
-            },
-            function() {
-                // the socket has been closed
-                console.info('app.observer : socket closed');
-            }
         );
     },
 
@@ -126,6 +180,10 @@ var app = {
         });
     },
 
+    showLegend : function (nom) {
+        //$('#legendContainer').append('<input type="checkbox">' + nom + '</input>');
+
+    },
     /**
      * Initialisatons des objets de bases html
      */
@@ -144,7 +202,31 @@ var app = {
                 var isConnectState = (that.$btnWsConnect.attr("data-b-isconnect") === 'true');
                 that.switchConnectState(isConnectState);
 
-            });
+            }
+        );
+
+        $('#selectValeurType').on('change', function () {
+
+            alert("change: " + $(this).val());
+        });
+
+        // var $chkValBourse = $('.valBoursiereCheckBox');
+        //
+        // $chkValBourse.click(function (e) {
+        //     //alert($(this).attr('name') + $(this).prop('checked'));
+        //
+        //     var indice = that.getObjectPositionInArray($(this).prop('name'));
+        //
+        //     if($(this).prop('checked')){
+        //         indice.isVisible = true;
+        //     }else{
+        //         indice.isVisible = false;
+        //     }
+        //
+        //     that.chart.render();
+        //
+        // });
+
     },
 
     /**
@@ -191,7 +273,7 @@ var app = {
 
     refreshChart : function () {
         this.chart.options.data = [];
-        this.indices = [];
+        this.indicesCache = [];
         this.chart.render();
     },
 
@@ -216,7 +298,7 @@ var app = {
     //recherche si l'objet avec le nom passé en paramètre existe déjé dans le cache
     alreadyExist : function ( nom) {
 
-        var nbreElements = this.indices.length;
+        var nbreElements = this.indicesCache.length;
         console.log(1);
 
         if (nbreElements === 0) {
@@ -225,7 +307,7 @@ var app = {
 
             for (cpt = 0; cpt < nbreElements; cpt++) {
 
-                var cachingIndice = this.indices[cpt];
+                var cachingIndice = this.indicesCache[cpt];
 
                 //si l'objet est présent
                 if (cachingIndice.nom === nom) {
@@ -239,13 +321,13 @@ var app = {
 
     //retourne l'objet présent en cache via son identification
     getObjectPositionInArray : function (nom) {
-        var nbreElements = this.indices.length;
+        var nbreElements = this.indicesCache.length;
 
         for(cpt = 0; cpt < nbreElements; cpt ++){
-            var cachingIndice = this.indices[cpt];
+            var cachingIndice = this.indicesCache[cpt];
             //console.log(cachingIndice);
             if(cachingIndice.nom === nom){
-                return this.indices[cpt];
+                return this.indicesCache[cpt];
             }
         }
 

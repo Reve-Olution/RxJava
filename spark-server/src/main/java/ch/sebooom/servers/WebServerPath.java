@@ -10,7 +10,7 @@ public enum WebServerPath {
     EVENTS("/events"),
     GPS_CLIENT("/gpsSocket"),
     INDICES_CLIENT("/indicesSocket"),
-    REST_INDICES("/indices");
+    REST_INDICES("/indicesCache");
 
     private String path;
 

@@ -7,7 +7,7 @@ import io.vertx.rxjava.core.http.ServerWebSocket;
  */
 public interface WebSocketWriter  {
 
-    public void start ();
+    public void start () ;
 
     public WebSocketWriter socket (ServerWebSocket socket);
 

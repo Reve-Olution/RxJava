@@ -24,6 +24,8 @@
         <processorPath useClasspath="true" />
         <module name="domain" />
         <module name="java-samples" />
+        <module name="vertx-cours-indices" />
+        <module name="vertx-ws-indices" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -32,6 +34,8 @@
       <module name="mongo-java-samples" target="1.7" />
       <module name="spark-server" target="1.8" />
       <module name="vertx-3" target="1.8" />
+      <module name="vertx-cours-indices" target="1.8" />
+      <module name="vertx-ws-indices" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

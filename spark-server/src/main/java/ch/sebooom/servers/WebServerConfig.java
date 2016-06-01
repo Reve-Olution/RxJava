@@ -31,11 +31,11 @@ public class WebServerConfig {
 
     public enum DefaultValues{
         WS_SERVER_WWW("/public"),
+        REST_INDICES_PATH("/api/indices"),
         WS_SERVER_PORT(8888),
         WS_SERVER_HOST("localhost"),
-        WS_SERVER_INDICES_PATH("/ws/cot"),
-        WS_SERVER_GPS_PATH("/ws/gps")
-        ;
+        WS_SERVER_INDICES_PATH("/"),
+        WS_SERVER_GPS_PATH("/");
 
         public String strValue = null;
         public Integer intValue = null;

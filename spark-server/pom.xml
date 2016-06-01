@@ -54,6 +54,9 @@
 
 		</plugins>
 	</build>
+	<modules>
+		<module>../vertx-ws-indices</module>
+	</modules>
 
 	<dependencies>
 		<dependency>
@@ -102,6 +105,9 @@
 			<artifactId>retrofit</artifactId>
 			<version>1.9.0</version>
 		</dependency>
+
+
+
 
 		<dependency>
 			<groupId>ch.sebooom.rx</groupId>

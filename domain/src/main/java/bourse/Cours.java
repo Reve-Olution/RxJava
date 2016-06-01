@@ -1,4 +1,4 @@
-package cotation;
+package bourse;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,6 +12,7 @@ public class Cours {
 	
 	private Date dateValeur;
 	private BigDecimal valeurCours;
+
 	
 	
 	public Cours(double valeurCours) {

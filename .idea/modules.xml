@@ -7,6 +7,8 @@
       <module fileurl="file://$PROJECT_DIR$/rx-js/rx-js.iml" filepath="$PROJECT_DIR$/rx-js/rx-js.iml" />
       <module fileurl="file://$PROJECT_DIR$/spark-server/spark-server.iml" filepath="$PROJECT_DIR$/spark-server/spark-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/vertx-3/vertx-3.iml" filepath="$PROJECT_DIR$/vertx-3/vertx-3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/domain/vertx-cours-indices.iml" filepath="$PROJECT_DIR$/domain/vertx-cours-indices.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vertx-ws-indices/vertx-ws-indices.iml" filepath="$PROJECT_DIR$/vertx-ws-indices/vertx-ws-indices.iml" />
     </modules>
   </component>
 </project>

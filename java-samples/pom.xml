@@ -63,6 +63,14 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- http://mvnrepository.com/artifact/org.easytesting/fest-assert -->
+		<dependency>
+			<groupId>org.easytesting</groupId>
+			<artifactId>fest-assert</artifactId>
+			<version>1.4</version>
+		</dependency>
+
 	</dependencies>
 
 

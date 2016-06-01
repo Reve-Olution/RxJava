@@ -1,12 +1,10 @@
 package ch.sebooom.mongodb;
 
 
+import bourse.*;
 import ch.sebooom.servers.WebServer;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import cotation.Cours;
-import cotation.Indice;
-import cotation.Indices;
 import org.bson.Document;
 import rx.Observable;
 
@@ -32,14 +30,14 @@ public class IndiceDAO {
 
                 Indices indices = null;
 
-                List<Indice> indiceList = new ArrayList<>();
+                List<ValeurBoursiere> valeurBoursiereList = new ArrayList<>();
 
                 List<Document> mongoDbIndices;
 
                 if(indicesDocument == null){
                     mongoDbIndices = new ArrayList<Document>();
                 }else{
-                    mongoDbIndices = (List<Document>)indicesDocument.get("indices");
+                    mongoDbIndices = (List<Document>)indicesDocument.get("indicesCache");
 
                 }
 
@@ -48,21 +46,23 @@ public class IndiceDAO {
                     log.info(indice.toJson());
                     Document cours = (Document)indice.get("cours");
 
-                    indiceList.add(new Indice(indice.getString("nom"),
-                            new Cours(cours.getDouble("valeurCours"))));
+                    valeurBoursiereList.add(new ValeurBoursiere(indice.getString("nom"),
+                             indice.getString("nom").replace(" ","_").toUpperCase(),
+                            new Cours(cours.getDouble("valeurCours")),
+                            Pays.PAYS_BAS, TypeValeurs.INDICE_BOURSIER));
                 }
 
-                log.info("s2:" + indiceList.size());
-                if(!indiceList.isEmpty()){
+                log.info("s2:" + valeurBoursiereList.size());
+                if(!valeurBoursiereList.isEmpty()){
                     indices = new Indices(VALIDITE_DONNEE);
-                    indices.setIndices(indiceList);
+                    indices.setValeurBoursieres(valeurBoursiereList);
                     log.info("s3:");
 
                 }
 
                 boolean  cacheEmpty = (indices != null && indices.containsData()) ? Boolean.FALSE : Boolean.TRUE;
 
-            log.info("MongoDB contain " + ((cacheEmpty) ? "no values": indices.getIndices().size() + " values"));
+            log.info("MongoDB contain " + ((cacheEmpty) ? "no values": indices.getValeurBoursieres().size() + " values"));
 
             if(!cacheEmpty){log.info("MongoDB Cache expire on : " + indices.getExpirationDonnees());};
 
@@ -89,15 +89,15 @@ public class IndiceDAO {
         Document indicesMongo = new Document("expirationDonnees",indices.getExpirationDonnees());
         List<Document> indiceForIndices = new ArrayList<>();
 
-        for(Indice indice : indices.getIndices()){
-            indiceForIndices.add(new Document("nom",indice.getNom())
-                    .append("cours",new Document("dateValeur",indice.getCours().getDateValeur())
-                                        .append("valeurCours",indice.getCours().getValeurCours().doubleValue())));
+        for(ValeurBoursiere valeurBoursiere : indices.getValeurBoursieres()){
+            indiceForIndices.add(new Document("nom", valeurBoursiere.getIdentifiant())
+                    .append("cours",new Document("dateValeur", valeurBoursiere.getCours().getDateValeur())
+                                        .append("valeurCours", valeurBoursiere.getCours().getValeurCours().doubleValue())));
         }
 
-        indicesMongo.append("indices",indiceForIndices);
+        indicesMongo.append("indicesCache",indiceForIndices);
 
-                log.info("Saving indices in db");
+                log.info("Saving indicesCache in db");
             indiceCollection.insertOne(indicesMongo);
 
 

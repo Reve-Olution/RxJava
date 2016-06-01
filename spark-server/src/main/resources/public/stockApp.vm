@@ -40,13 +40,60 @@
                 </div>
             </div><!-- end websocket messages -->
 
-            <!-- zone graph -->
+            <!-- panneau legende indice -->
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Graphes</h3>
+                    <h3 class="panel-title">Indices</h3>
                 </div>
-                <div id="chartContainer"></div>
-            </div><!-- fin zone graph -->
+                <div id="legendContainer" class="panel-body">
+
+                    <!-- liste des types de valeurs -->
+                    <select id="selectValeurType" class="form-control">
+                    #foreach( $typeValeur in $typesValeurs )
+                        <option value="$typeValeur">$typeValeur</option>
+                    #end
+                    </select>
+
+                    <div class="list-group">
+
+
+                    </div>
+                    #foreach( $indice in $indices )
+                        <a href="#" data-indice-nom="$indice" class="list-group-item">$indice</a>
+
+                    #end
+
+
+                </div>
+                <div id ="messages" class="panel-body">
+
+                </div>
+            </div><!-- end websocket messages -->
+
+
+
+
+
+                    <!-- zone graph -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Graphes</h3>
+                        </div>
+
+                        <div id="graphZone" class="panel-body" style="height:800px">
+                        <!-- <div class="row">-->
+                        <!--<div id="legendContainer" class="col-md-4"></div>-->
+                            <div id="chartContainer"></div>
+
+
+                        <!--  </div>-->
+
+                        </div>
+                    </div><!-- fin panel graph -->
+
+
+
+
         </div><!-- end main wrapper -->
 
         <!-- canvas -->
@@ -67,7 +114,7 @@
 
 
             $(function (){
-                app.initApp('$wsUrl');
+                app.initApp('$wsUrl','$restUrl');
             });
         </script>
         <link rel="stylesheet" href="css/stockApp.css">

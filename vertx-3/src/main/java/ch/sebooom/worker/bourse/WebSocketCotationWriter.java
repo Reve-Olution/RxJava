@@ -1,8 +1,8 @@
-package ch.sebooom.worker.cotation;
+package ch.sebooom.worker.bourse;
 
 import ch.sebooom.worker.WebSocketWriter;
-import cotation.Indice;
-import cotation.Indices;
+import bourse.ValeurBoursiere;
+import bourse.Indices;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -32,11 +32,11 @@ public class WebSocketCotationWriter implements WebSocketWriter{
     @Override
     public void start() {
 
-        List<Indice> courses = Indices.getIndicesAsList();
+        List<ValeurBoursiere> courses = Indices.getIndicesAsList();
 
         ExecutorService executorService = Executors.newFixedThreadPool(courses.size());
 
-        for(Indice indice : courses){
+        for(ValeurBoursiere valeurBoursiere : courses){
 
 
 
@@ -48,8 +48,8 @@ public class WebSocketCotationWriter implements WebSocketWriter{
 
                     try {
                         Thread.sleep(getRandomMillisForThreadSleep(200,3000));
-                        websocket.writeFinalTextFrame(Json.encode(indice));
-                        indice.defineCours();
+                        websocket.writeFinalTextFrame(Json.encode(valeurBoursiere));
+                        valeurBoursiere.nextAleatoire();
 
                     } catch (InterruptedException | IllegalStateException e) {
 
